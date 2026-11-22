@@ -120,6 +120,20 @@ def run_retrieval_eval(config: dict) -> None:
         log_success(f"TEST {name:13s} {summary}")
 
 
+def run_style_transfer(config: dict) -> None:
+    """Gatys style transfer on yoga photos: style grid, weight sweep, layer/init ablations, figures."""
+    from src.style_transfer.figures import make_style_figures
+    from src.style_transfer.study import Study, summarize_by_style
+
+    runs = Study(config).run()
+    runs.to_csv(get_path(config, "output_dir") / "metrics" / "style_runs.csv", index=False)
+    make_style_figures(config, runs)
+    summary = summarize_by_style(config, runs)[["pose_oks", "ssim", "pose_retrieved"]].round(2)
+    log_info("Per artwork (mean over poses):\n" + summary.to_string())
+    n_images = int((runs.experiment != "original").sum())
+    log_success(f"{n_images} stylised images → data/style_transfer/ · figures → outputs/figures/")
+
+
 # Stage functions in execution order; each is switched on by `pipeline.<name>` in config.yaml.
 STAGES: dict = {
     "run_data_prep": run_data_prep,
@@ -127,6 +141,7 @@ STAGES: dict = {
     "run_tuning": run_tuning,
     "run_indexing": run_indexing,
     "run_retrieval_eval": run_retrieval_eval,
+    "run_style_transfer": run_style_transfer,
 }
 
 

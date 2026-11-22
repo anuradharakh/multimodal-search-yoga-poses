@@ -75,3 +75,27 @@ reranker:
 ui:
   title: Yoga Pose Search
   page_icon: "🧘"
+
+style_transfer:
+  size: 384               # longest side of generated images (px)
+  steps: 300              # L-BFGS iterations
+  content_weight: 1.0     # α
+  style_weight: 1.0e+6    # β (β/α is the content/style trade-off)
+  tv_weight: 1.0e-5       # γ
+  candidates_per_pose: 12 # test photos screened per pose to find a confidently-detected skeleton
+  content_poses:          # varied silhouettes
+    - virabhadrasana ii   # Warrior II
+    - utthita trikonasana # Extended Triangle
+    - natarajasana        # Lord of the Dance
+    - ustrasana           # Camel
+    - adho mukha svanasana  # Downward Dog
+    - bakasana            # Crow
+  styles:                 # public-domain artworks in assets/styles/<key>.jpg
+    starry_night: Van Gogh — The Starry Night (1889)
+    great_wave: Hokusai — The Great Wave off Kanagawa (c. 1831)
+    the_scream: Munch — The Scream (1893)
+    composition_vii: Kandinsky — Composition VII (1913)
+    impression_sunrise: Monet — Impression, Sunrise (1872)
+  weight_ratios: [1.0e+3, 1.0e+4, 1.0e+5, 1.0e+6, 1.0e+7]
+  sweep_pairs: [[virabhadrasana ii, starry_night], [natarajasana, composition_vii]]
+  ablation_pairs: [[utthita trikonasana, great_wave], [ustrasana, the_scream]]

@@ -252,3 +252,53 @@ python scripts/capture_screenshots.py     # with the app running
 **Try this.** Toggle the reranker on a random test photo and watch results move. On the stylised
 Triangle-pose upload (screenshot), the reranker reinforces the *Revolved* Triangle cluster — a
 reminder of its failure mode: it strengthens whatever pose dominates the candidate list.
+
+---
+
+## Step 8 — Neural style transfer and pose preservation
+
+**Goal.** Re-render yoga photos in the style of famous paintings and measure — not just eyeball —
+whether the **pose** survives.
+
+| Module | What it does |
+|---|---|
+| `src/style_transfer/vgg_features.py` | frozen VGG-19 (average-pooling), named layers, image ↔ tensor helpers |
+| `src/style_transfer/losses.py` | content loss (`conv4_2`), Gram-matrix style loss (`conv1_1…conv5_1`), total variation |
+| `src/style_transfer/optimizer.py` | `StyleTransfer`: optimises the image with L-BFGS from the content photo |
+| `src/style_transfer/pose_metrics.py` | Keypoint R-CNN **OKS**, SSIM, content / style distances |
+| `src/style_transfer/study.py` | content-photo selection, 48 runs (grid, weight sweep, layer & init ablations), cached per run |
+| `src/style_transfer/figures.py` | figures redrawn from the saved run table |
+| `assets/styles/` | five public-domain artworks (sources in `assets/styles/README.md`) |
+
+**How it works.** `L = α·L_content + β·L_style + γ·L_TV`. The content term keeps *what is where*
+(the body's layout); the style term matches feature **correlations** (Gram matrices) — colours and
+brush-strokes without layout. `β/α` is the trade-off knob; starting from the photo instead of noise
+keeps the geometry pinned.
+
+**Measuring "pose preserved".** For each output: keypoint similarity (OKS) between the skeletons a
+detector finds on the photo and on the painting; SSIM; and whether the **search engine from steps
+4–6 still recognises the pose** — tying both halves of the project together.
+
+**Results** (`outputs/metrics/style_*.csv`, means over 6 poses):
+
+| Artwork | Pose OKS | SSIM | Recognised by search |
+|---|---|---|---|
+| Hokusai, *The Great Wave* | 0.76 | 0.45 | 4 / 6 |
+| Munch, *The Scream* | 0.75 | 0.39 | 6 / 6 |
+| Monet, *Impression, Sunrise* | 0.73 | 0.43 | 6 / 6 |
+| Van Gogh, *The Starry Night* | 0.70 | 0.24 | 5 / 6 |
+| Kandinsky, *Composition VII* | 0.47 | 0.27 | 2 / 6 |
+
+**Lessons.**
+* **Texture, not colour, destroys poses.** Low-frequency styles with clear figure–ground separation
+  keep the skeleton; Kandinsky's all-over confetti camouflages limbs.
+* **β/α trades SSIM for style, not pose.** From 10³ to 10⁷, SSIM falls 0.83 → 0.12 but Warrior II's
+  OKS only 1.00 → 0.87, because the optimisation starts from the photo.
+* **Read OKS within a pose.** Folded or inverted bodies (Downward Dog, Camel) score low under every
+  style, because the detector itself is unsure; compare artworks *for the same pose*.
+
+**Run it.**
+
+```bash
+python run_pipeline.py --only style_transfer     # ≈ 17 min on an Apple M-series GPU
+```

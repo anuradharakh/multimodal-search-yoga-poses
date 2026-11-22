@@ -30,3 +30,16 @@ data:
     gallery: 0.70         # indexed in the vector database
     val: 0.15             # tuning queries
     test: 0.15            # final, held-out queries
+
+embedding:
+  backbones:              # frozen, pre-trained; all four CNNs + one non-CNN reference
+    - resnet50            # torchvision, ImageNet-1k
+    - efficientnet_v2_s   # torchvision, ImageNet-1k
+    - convnext_tiny       # torchvision, ImageNet-1k
+    - clip_rn50           # OpenAI CLIP ResNet-50 (image + text)
+    - clip_vit_b32        # OpenAI CLIP ViT-B/32 — reference only, not a CNN
+  preprocess: [pad, crop]
+  input_size: 224
+  batch_size: 64
+  num_workers: 4
+  overwrite: false        # true → re-extract even if cached

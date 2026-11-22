@@ -32,9 +32,25 @@ def run_data_prep(config: dict) -> None:
     log_success(f"Kept {len(df):,} images of {df.pose.nunique()} poses — {df.split.value_counts().to_dict()}")
 
 
+def run_embedding(config: dict) -> None:
+    """Cache raw features for every backbone × preprocessing × {original, mirrored} view."""
+    from src.data.manifest import load_manifest
+    from src.embedding.extractor import extract_features
+    from src.utils.device import get_device
+
+    df = load_manifest(config)
+    device = get_device(config["project"]["device"])
+    log_info(f"Device: {device}")
+    for prep in config["embedding"]["preprocess"]:
+        done = extract_features(config, df["abs_path"].tolist(), config["embedding"]["backbones"], prep, device)
+        log_info(f"[{prep}] extracted: {done or 'all cached'}")
+    log_success(f"{len(list(get_path(config, 'embeddings_dir').glob('*.npy')))} feature matrices in data/embeddings/")
+
+
 # Stage functions in execution order; each is switched on by `pipeline.<name>` in config.yaml.
 STAGES: dict = {
     "run_data_prep": run_data_prep,
+    "run_embedding": run_embedding,
 }
 
 

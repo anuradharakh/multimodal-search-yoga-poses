@@ -67,3 +67,33 @@ python run_pipeline.py --only data_prep
 
 Output: `data/processed/images/<pose>/*.jpg`, `data/processed/manifest.csv`,
 `outputs/metrics/data_cleaning.json`.
+
+---
+
+## Step 3 — Image embeddings from pre-trained CNNs
+
+**Goal.** Represent every image as a vector such that *similar poses → nearby vectors*.
+
+| Module | What it does |
+|---|---|
+| `src/embedding/backbones.py` | ResNet-50, EfficientNetV2-S, ConvNeXt-Tiny (ImageNet), CLIP ResNet-50 and CLIP ViT-B/32 (reference) — frozen |
+| `src/embedding/pooling.py` | feature map → vector: average (GAP) vs. generalised-mean (GeM) pooling |
+| `src/embedding/preprocessing.py` | centre-crop vs. letterbox to 224 × 224 |
+| `src/embedding/extractor.py` | batched extraction of original + mirrored views, cached as `.npy` |
+
+**Key decisions.**
+* **Extract once, tune many times.** Raw pooled features for every backbone, both preprocessings
+  and both views are cached (40 matrices). All later tuning is NumPy on these caches — seconds
+  instead of minutes per configuration.
+* **One forward pass, several poolings.** Each backbone returns GAP and GeM (and CLIP's attention
+  pool) from the same feature map.
+* **Normalisation on the GPU.** The data loader ships uint8 tensors; each backbone applies its own
+  mean/std (ImageNet vs. CLIP), so one loader feeds all five networks.
+
+**Run it.**
+
+```bash
+python run_pipeline.py --only embedding
+# ≈ 3.5 min per preprocessing on an Apple M-series GPU; later runs report "all cached"
+# 40 feature matrices in data/embeddings/
+```

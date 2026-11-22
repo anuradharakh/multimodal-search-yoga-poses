@@ -6,16 +6,19 @@ Every cleaned image becomes one point (id = manifest row) with two named vectors
 * ``clip``  — CLIP-RN50's joint image–text embedding, used for text → image search.
 
 The projection fitted on the gallery is saved next to the index so query images are embedded
-exactly like the database images.
+exactly like the database images, together with a gallery-neighbour table for the reranker.
 """
 
 import json
 import time
 from pathlib import Path
 
+import numpy as np
+
 from src.data.manifest import load_manifest, split_masks
 from src.embedding.postprocess import Projector, SearchConfig, build_vectors, load_selection
 from src.indexing.vector_store import VectorStore
+from src.retrieval.reranker import build_neighbor_table, save_neighbor_table
 from src.utils.config_loader import get_path
 
 CLIP_CONFIG = SearchConfig("clip_rn50", "attn", "pad", False, "l2")
@@ -41,6 +44,9 @@ def build_index(config: dict) -> dict:
     image_vecs, projector = build_vectors(config, cfg, gallery, labels)
     projector.save(projector_path(config))
     clip_vecs, _ = build_vectors(config, CLIP_CONFIG, gallery)
+    # Gallery neighbours of every image, used by the reranker (rows = point ids = manifest rows).
+    table = build_neighbor_table(image_vecs, np.flatnonzero(gallery), config["reranker"]["neighbor_table_k"])
+    save_neighbor_table(table, get_path(config, "index_dir") / "gallery_neighbors.npy")
 
     t0 = time.perf_counter()
     store = open_store(config)

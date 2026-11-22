@@ -164,3 +164,64 @@ Qdrant Cloud by changing one line.
 python run_pipeline.py --only indexing
 # Indexed 5,774 points · vectors {'image': 106, 'clip': 1024} · 3.5 s
 ```
+
+---
+
+## Step 6 — Retrieval and reranking
+
+**Goal.** Turn the index into a two-stage search engine — *retrieve, then rerank* — exactly the
+shape of a text RAG retriever, and prove each stage with numbers.
+
+```
+query image ─► QueryEncoder (same pipeline + saved projection) ─► Qdrant top-fetch_k (gallery filter)
+            ─► NeighborhoodReranker ─► top-k results
+```
+
+| Module | What it does |
+|---|---|
+| `src/retrieval/query_encoder.py` | embeds an uploaded photo (or text, for CLIP) exactly like the database images |
+| `src/retrieval/reranker.py` | gallery-neighbour table + **neighbourhood-overlap reranker**; α-query expansion for comparison |
+| `src/retrieval/rrf.py` | Reciprocal Rank Fusion (for the hybrid-retrieval comparison) |
+| `src/retrieval/search_service.py` | `PoseSearch`: encode → Qdrant → rerank, with per-stage timings |
+| `src/evaluation/retrieval_eval.py` | reranker tuning on val, alternatives, final test evaluation through Qdrant |
+| `src/evaluation/text_search.py` | text → image evaluation with CLIP prompts |
+
+**How the reranker works.** Dense retrieval scores each gallery image *independently*. The reranker
+adds context: a candidate that really shows the query's pose has nearest neighbours that overlap
+with the query's own top results. Score = `(1 − λ)·cosine + λ·overlap`, using a neighbour table
+precomputed at indexing time (cost ≈ 0.02 ms per query). There is no image equivalent of a text
+cross-encoder; neighbourhood (k-reciprocal-style) reranking is the standard image-retrieval tool.
+
+**Selecting it with a guardrail.** On val, pushing λ up keeps raising mAP@10 (to ~0.59) but drops
+**Hit@5** from 0.85 to 0.77 — the reranker "commits" to the dominant cluster, and when that cluster
+is the wrong pose the user sees *no* correct result. So the selection rule (config `reranker.selection`)
+maximises mAP@10 **subject to Hit@5 falling ≤ 2 points** → `fetch_k=20, k=30, λ=0.3`.
+
+**Alternatives considered (val, mAP@10):**
+
+| Method | mAP@10 |
+|---|---|
+| dense retrieval only | 0.499 |
+| hybrid: tuned + raw CLIP, fused with RRF | **0.254** ✗ |
+| α-query expansion (k = 10) | 0.549 |
+| **neighbourhood reranker (selected)** | **0.565** |
+
+*Why hybrid RRF fails here but works in text RAG:* BM25 and dense retrieval are both decent and make
+*different* mistakes. Raw CLIP is far weaker than the tuned vector (0.12 vs. 0.50 mAP) and RRF gives
+both lists equal votes, so it mostly imports CLIP's errors.
+
+**Final result — held-out test split, through Qdrant:**
+
+| | P@1 | P@5 | mAP@10 | Hit@5 |
+|---|---|---|---|---|
+| dense only | 0.697 | 0.628 | 0.525 | 0.870 |
+| **dense + reranker** | **0.706** | **0.656** | **0.584** | 0.849 |
+
+**Run it.**
+
+```bash
+python run_pipeline.py --only indexing retrieval_eval
+# Reranker selected on val (with Hit@5 guardrail): RerankerParams(fetch_k=20, k=30, weight=0.3)
+# TEST dense         P@1 0.697 · P@5 0.628 · mAP@10 0.525 · Hit@5 0.870
+# TEST dense+rerank  P@1 0.706 · P@5 0.656 · mAP@10 0.584 · Hit@5 0.849
+```

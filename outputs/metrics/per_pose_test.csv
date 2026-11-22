@@ -1,0 +1,108 @@
+pose,n_queries,P@5,most_confused_with,confusion_share
+eka pada rajakapotasana ii,6,0.13333333333333333,eka pada rajakapotasana,0.3333333333333333
+tulasana,4,0.15,tolasana,0.65
+virasana,7,0.17142857142857143,vajrasana,0.22857142857142856
+upavistha konasana,9,0.2,parivrtta janu sirsasana,0.17777777777777778
+marichyasana i,7,0.22857142857142856,marichyasana iii,0.45714285714285713
+janu sirsasana,6,0.23333333333333334,paschimottanasana,0.4
+lolasana,5,0.24,parsva bakasana,0.4
+utthita ashwa sanchalanasana,5,0.28,anjaneyasana,0.28
+padmasana,10,0.3,sukhasana,0.38
+ganda bherundasana,5,0.32,vrischikasana,0.4
+parivrtta parsvakonasana,5,0.32,utthita parsvakonasana,0.36
+agnistambhasana,5,0.36,sukhasana,0.4
+eka pada koundinyanasana i,5,0.36,eka pada koundinyanasana ii,0.4
+kurmasana,6,0.36666666666666664,supta baddha konasana,0.16666666666666666
+eka pada koundinyanasana ii,6,0.36666666666666664,eka pada koundinyanasana i,0.13333333333333333
+tittibhasana,8,0.375,astavakrasana,0.25
+chakravakasana,10,0.38,bitilasana,0.44
+makara adho mukha svanasana,6,0.4,chaturanga dandasana,0.36666666666666664
+supta matsyendrasana,8,0.4,supta baddha konasana,0.275
+marjaryasana,6,0.4,bitilasana,0.3333333333333333
+parivrtta trikonasana,9,0.4,utthita trikonasana,0.3111111111111111
+makarasana,9,0.4,savasana,0.17777777777777778
+padangusthasana,2,0.4,uttanasana,0.4
+ardha pincha mayurasana,7,0.4,adho mukha svanasana,0.2571428571428571
+ardha bhekasana,5,0.4,dhanurasana,0.2
+bharadvajasana i,8,0.4,virasana,0.1
+malasana,10,0.42,bhujapidasana,0.18
+salabhasana,9,0.4222222222222222,makarasana,0.17777777777777778
+baddha konasana,11,0.43636363636363634,padmasana,0.14545454545454545
+adho mukha vriksasana,9,0.4444444444444444,urdhva prasarita eka padasana,0.1111111111111111
+supta baddha konasana,11,0.45454545454545453,baddha konasana,0.3090909090909091
+vasisthasana,11,0.4727272727272727,utthita trikonasana,0.21818181818181817
+uttanasana,8,0.475,padangusthasana,0.25
+urdhva mukha svanasana,10,0.5,bhujangasana,0.28
+utthita trikonasana,10,0.5,parivrtta trikonasana,0.34
+anjaneyasana,10,0.5,virabhadrasana i,0.12
+hanumanasana,5,0.52,salamba bhujangasana,0.16
+phalakasana,9,0.5333333333333333,purvottanasana,0.17777777777777778
+bhairavasana,7,0.5428571428571428,durvasasana,0.11428571428571428
+salamba sirsasana,8,0.55,adho mukha vriksasana,0.125
+kapotasana,9,0.5555555555555556,urdhva dhanurasana,0.13333333333333333
+mayurasana,7,0.5714285714285714,eka pada koundinyanasana ii,0.2
+salamba bhujangasana,7,0.5714285714285714,bhujangasana,0.37142857142857144
+tadasana,8,0.575,urdhva hastasana,0.3
+parsva bakasana,9,0.5777777777777777,bakasana,0.13333333333333333
+bhujangasana,10,0.58,urdhva mukha svanasana,0.2
+chaturanga dandasana,13,0.5846153846153846,makara adho mukha svanasana,0.12307692307692308
+virabhadrasana i,8,0.6,utthita ashwa sanchalanasana,0.3
+dwi pada viparita dandasana,8,0.6,urdhva dhanurasana,0.175
+viparita karani,10,0.6,salamba sarvangasana,0.32
+salamba sarvangasana,10,0.62,pincha mayurasana,0.12
+eka pada rajakapotasana,5,0.64,eka pada rajakapotasana ii,0.08
+pincha mayurasana,5,0.64,virabhadrasana iii,0.2
+parsvottanasana,5,0.64,parsva bakasana,0.08
+urdhva prasarita eka padasana,8,0.65,adho mukha vriksasana,0.275
+krounchasana,6,0.6666666666666666,dhanurasana,0.16666666666666666
+ardha uttanasana,9,0.6666666666666666,virabhadrasana iii,0.1111111111111111
+matsyasana,9,0.6666666666666666,supta virasana,0.15555555555555556
+tolasana,8,0.675,tulasana,0.2
+bitilasana,12,0.6833333333333333,chakravakasana,0.23333333333333334
+ardha matsyendrasana,13,0.6923076923076923,bharadvajasana i,0.1076923076923077
+supta virasana,8,0.7,matsyasana,0.1
+bhujapidasana,9,0.7111111111111111,bakasana,0.1111111111111111
+sukhasana,7,0.7142857142857143,virasana,0.08571428571428572
+simhasana,7,0.7142857142857143,vajrasana,0.11428571428571428
+vajrasana,8,0.725,virasana,0.075
+marichyasana iii,5,0.76,ardha matsyendrasana,0.12
+ashtanga namaskara,5,0.76,malasana,0.12
+setu bandha sarvangasana,9,0.7777777777777778,savasana,0.08888888888888889
+supta padangusthasana,10,0.78,anantasana,0.1
+natarajasana,11,0.7818181818181819,utthita hasta padangustasana,0.14545454545454545
+urdhva hastasana,6,0.8,tadasana,0.13333333333333333
+balasana,11,0.8,supta baddha konasana,0.07272727272727272
+paschimottanasana,9,0.8,dandasana,0.13333333333333333
+camatkarasana,8,0.8,utthita parsvakonasana,0.075
+utthita parsvakonasana,9,0.8222222222222222,parivrtta trikonasana,0.1111111111111111
+savasana,8,0.825,supta baddha konasana,0.1
+parivrtta janu sirsasana,5,0.84,janu sirsasana,0.16
+ananda balasana,9,0.8444444444444444,viparita karani,0.1111111111111111
+pasasana,9,0.8444444444444444,bharadvajasana i,0.13333333333333333
+ardha chandrasana,8,0.85,virabhadrasana iii,0.075
+bakasana,12,0.8666666666666667,lolasana,0.06666666666666667
+gomukhasana,11,0.8727272727272727,virasana,0.05454545454545454
+urdhva dhanurasana,10,0.88,ardha pincha mayurasana,0.04
+adho mukha svanasana,10,0.88,ardha pincha mayurasana,0.06
+purvottanasana,10,0.88,supta baddha konasana,0.06
+uttana shishosana,7,0.8857142857142857,ardha pincha mayurasana,0.05714285714285714
+utthita hasta padangustasana,9,0.8888888888888888,natarajasana,0.1111111111111111
+ustrasana,13,0.8923076923076924,bharadvajasana i,0.06153846153846154
+garudasana,12,0.9,durvasasana,0.1
+durvasasana,6,0.9,utthita hasta padangustasana,0.03333333333333333
+astavakrasana,11,0.9090909090909091,bakasana,0.03636363636363636
+bhekasana,5,0.92,marichyasana i,0.04
+anantasana,6,0.9333333333333333,upavistha konasana,0.03333333333333333
+halasana,10,0.94,kurmasana,0.04
+vrischikasana,7,0.9428571428571428,ganda bherundasana,0.02857142857142857
+virabhadrasana ii,8,0.95,virabhadrasana iii,0.05
+utkatasana,11,0.9636363636363636,garudasana,0.03636363636363636
+dhanurasana,6,0.9666666666666667,bhekasana,0.03333333333333333
+vriksasana,10,0.98,garudasana,0.02
+virabhadrasana iii,9,1.0,,0.0
+prasarita padottanasana,10,1.0,,0.0
+garbha pindasana,5,1.0,,0.0
+parighasana,6,1.0,,0.0
+paripurna navasana,10,1.0,,0.0
+dandasana,9,1.0,,0.0
+yoganidrasana,7,1.0,,0.0

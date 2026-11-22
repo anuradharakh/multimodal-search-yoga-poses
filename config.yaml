@@ -54,3 +54,20 @@ evaluation:
 
 indexing:
   collection: yoga_poses  # Qdrant collection (embedded / local mode under data/indexes/qdrant)
+
+retrieval:
+  top_k: 12               # results shown in the app
+
+reranker:
+  enabled: true
+  neighbor_table_k: 50    # gallery neighbours stored per image at indexing time
+  default: {fetch_k: 50, k: 10, weight: 0.3}   # used until the retrieval_eval stage selects params
+  search_space:           # tuned on the validation split
+    fetch_k: [20, 50, 100]
+    k: [5, 10, 20, 30, 50]
+    weight: [0.1, 0.2, 0.3, 0.5, 0.7]
+  selection:              # maximise `metric` without letting the guardrail metric fall more than allowed
+    metric: mAP@10
+    guardrail_metric: Hit@5
+    max_guardrail_drop: 0.02
+  rrf_k: 60               # for the hybrid-fusion comparison

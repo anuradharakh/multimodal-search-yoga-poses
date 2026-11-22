@@ -76,12 +76,57 @@ def run_indexing(config: dict) -> None:
     log_success(f"Indexed {meta['points']:,} points · vectors {meta['dims']} · {meta['build_seconds']} s")
 
 
+def run_retrieval_eval(config: dict) -> None:
+    """Tune the reranker on val, compare alternatives, then score the full pipeline on test via Qdrant."""
+    from dataclasses import asdict
+
+    from src.evaluation import retrieval_eval as R
+    from src.evaluation.text_search import text_search_eval
+    from src.retrieval.reranker import RerankerParams, load_neighbor_table
+    from src.retrieval.search_service import neighbor_table_path, reranker_selection_path
+    from src.utils.device import get_device
+    from src.utils.io import write_csv
+
+    metrics_dir = get_path(config, "output_dir") / "metrics"
+    table = load_neighbor_table(neighbor_table_path(config))
+
+    grid = R.tune_reranker(config, table)
+    write_csv(grid, metrics_dir / "reranker_grid_val.csv")
+    best_row = R.select_reranker(grid, config["reranker"]["selection"])
+    best = RerankerParams(int(best_row.fetch_k), int(best_row.k), float(best_row.weight))
+    val_metrics = {k: float(best_row[k]) for k in ("P@1", "P@5", "P@10", "mAP@10", "Hit@5")}
+    write_json({"params": asdict(best), "val_metrics": val_metrics}, reranker_selection_path(config))
+    log_info(f"Reranker selected on val (with Hit@5 guardrail): {best}")
+
+    alternatives = R.compare_alternatives(config, table, best)
+    write_csv(alternatives, metrics_dir / "reranker_alternatives_val.csv")
+    log_info("Alternatives (val):\n" + alternatives[["method", "P@1", "P@5", "mAP@10"]].round(3).to_string(index=False))
+
+    results = {split: R.evaluate_through_qdrant(config, table, best, split) for split in ("val", "test")}
+    test = results["test"]
+    df = R.load_manifest(config)
+    write_csv(
+        R.per_pose_report(df["pose"].to_numpy(), test.pop("_qi"), test.pop("_ids")), metrics_dir / "per_pose_test.csv"
+    )
+    results["val"].pop("_ids"), results["val"].pop("_qi")
+    write_json({"reranker": asdict(best), **results}, metrics_dir / "retrieval_final.json")
+
+    text = text_search_eval(config, get_device(config["project"]["device"]))
+    write_csv(text, metrics_dir / "text_search.csv")
+
+    for name in ("dense", "dense+rerank"):
+        m = test[name]
+        summary = " · ".join(f"{k} {m[k]:.3f}" for k in ("P@1", "P@5", "mAP@10", "Hit@5"))
+        log_success(f"TEST {name:13s} {summary}")
+
+
 # Stage functions in execution order; each is switched on by `pipeline.<name>` in config.yaml.
 STAGES: dict = {
     "run_data_prep": run_data_prep,
     "run_embedding": run_embedding,
     "run_tuning": run_tuning,
     "run_indexing": run_indexing,
+    "run_retrieval_eval": run_retrieval_eval,
 }
 
 

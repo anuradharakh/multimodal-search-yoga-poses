@@ -47,10 +47,31 @@ def run_embedding(config: dict) -> None:
     log_success(f"{len(list(get_path(config, 'embeddings_dir').glob('*.npy')))} feature matrices in data/embeddings/")
 
 
+def run_tuning(config: dict) -> None:
+    """Grid-search every configuration on the validation split and save the winner."""
+    from src.embedding.postprocess import SearchConfig, save_selection
+    from src.evaluation.tuning import ablation_table, best_per_backbone, grid_search
+    from src.utils.io import write_csv
+
+    metrics_dir = get_path(config, "output_dir") / "metrics"
+    grid = grid_search(config)
+    write_csv(grid, metrics_dir / "tuning_grid_val.csv")
+    write_csv(ablation_table(grid), metrics_dir / "tuning_ablation_val.csv")
+    write_csv(best_per_backbone(grid), metrics_dir / "tuning_best_per_backbone_val.csv")
+
+    best = grid.iloc[0]
+    cfg = SearchConfig.from_dict({**best.to_dict(), "tta": bool(best.tta)})
+    val = {k: float(best[k]) for k in ("P@1", "P@5", "P@10", "mAP@10", "Hit@5")}
+    save_selection(metrics_dir / "selected_config.json", cfg, val)
+    log_info(f"{len(grid)} configurations scored on val")
+    log_success(f"Selected {cfg.key} — val P@1 {val['P@1']:.3f} · mAP@10 {val['mAP@10']:.3f}")
+
+
 # Stage functions in execution order; each is switched on by `pipeline.<name>` in config.yaml.
 STAGES: dict = {
     "run_data_prep": run_data_prep,
     "run_embedding": run_embedding,
+    "run_tuning": run_tuning,
 }
 
 

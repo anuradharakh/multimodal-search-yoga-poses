@@ -97,3 +97,43 @@ python run_pipeline.py --only embedding
 # ≈ 3.5 min per preprocessing on an Apple M-series GPU; later runs report "all cached"
 # 40 feature matrices in data/embeddings/
 ```
+
+---
+
+## Step 4 — Evaluation and tuning on the validation split
+
+**Goal.** Decide, with numbers, which embedding pipeline to put in the database.
+
+| Module | What it does |
+|---|---|
+| `src/embedding/postprocess.py` | `SearchConfig` (one tunable configuration), flip-TTA, PCA-whitening / LDA `Projector`, 4-CNN ensemble |
+| `src/evaluation/metrics.py` | exact cosine top-k; P@k, mAP@k, Hit@5 (relevant = same pose) |
+| `src/evaluation/tuning.py` | scores all 176 configurations on **val**, ablation and per-backbone tables |
+
+**What the grid shows** (`outputs/metrics/tuning_*.csv`, validation mAP@10):
+
+| Change | mAP@10 |
+|---|---|
+| ResNet-50, GAP, centre-crop (ImageNet default) | 0.089 |
+| + letterbox, + flip-TTA | 0.091 |
+| + GeM pooling | 0.121 |
+| + PCA-whitening | 0.120 |
+| + **LDA projection** (supervised, CNN frozen) | **0.399** |
+| backbone → CLIP-RN50 | 0.469 |
+| backbone → ensemble of 4 CNNs → **selected** | **0.499** |
+
+**Key decisions.**
+* **Frozen CNN features find photos that *look* alike** (clothing, background), not poses that look
+  alike — every backbone scores ≤ 0.14 without a projection.
+* **LDA is the decisive step.** The gallery is labelled (like a product catalogue), so a ≤ 106-d
+  linear map can be learned on it that emphasises between-pose differences: ×3–4.5 mAP for every
+  backbone. Only gallery labels are used; val and test labels never touch the fit.
+* **Select on val, report on test.** The selection is saved to `outputs/metrics/selected_config.json`.
+
+**Run it.**
+
+```bash
+python run_pipeline.py --only tuning
+# 176 configurations scored on val
+# Selected ensemble|mixed|pad|tta|lda0.1 — val P@1 0.678 · mAP@10 0.499
+```

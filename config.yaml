@@ -43,3 +43,11 @@ embedding:
   batch_size: 64
   num_workers: 4
   overwrite: false        # true → re-extract even if cached
+
+tuning:
+  tta: [false, true]
+  post_processing: [l2, pcaw256, lda0.1, lda0.3]
+  selection_metric: mAP@10
+
+evaluation:
+  ks: [1, 5, 10]

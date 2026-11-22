@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Generated data, caches, indexes and model state (rebuilt by run_pipeline.py)
+data/*
+!data/.gitkeep
+
+# Large exports (rebuilt with jupyter nbconvert)
+outputs/html/
+
+# Course material
+*.pdf
+*.docx
+
+# Editors / OS / secrets
+.DS_Store
+.idea/
+.vscode/
+.env

@@ -1,0 +1,24 @@
+project:
+  name: multimodal-search-yoga-poses
+  random_seed: 42
+  device: auto            # auto | mps | cuda | cpu
+
+source:
+  kaggle_dataset: arrowe/yoga-poses-dataset-107
+  raw_dir: null           # null → download with kagglehub; or a folder containing train/ val/ test/
+
+paths:
+  processed_dir: data/processed       # cleaned images + manifest.csv
+  embeddings_dir: data/embeddings     # cached CNN features (.npy)
+  index_dir: data/indexes             # Qdrant storage + fitted projection
+  style_dir: data/style_transfer      # full-resolution stylised images
+  styles_dir: assets/styles           # artworks used as style images
+  output_dir: outputs                 # metrics, figures, screenshots (committed)
+
+pipeline:
+  run_data_prep: true
+  run_embedding: true
+  run_tuning: true
+  run_indexing: true
+  run_retrieval_eval: true
+  run_style_transfer: false

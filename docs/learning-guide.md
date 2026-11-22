@@ -225,3 +225,30 @@ python run_pipeline.py --only indexing retrieval_eval
 # TEST dense         P@1 0.697 · P@5 0.628 · mAP@10 0.525 · Hit@5 0.870
 # TEST dense+rerank  P@1 0.706 · P@5 0.656 · mAP@10 0.584 · Hit@5 0.849
 ```
+
+---
+
+## Step 7 — Web application
+
+**Goal.** A UI that accepts an image upload and shows similar poses — and makes the pipeline visible.
+
+| File | What it does |
+|---|---|
+| `app.py` | Streamlit UI: upload or random held-out test photo, text search tab, reranker toggle |
+| `scripts/capture_screenshots.py` | headless-Chromium screenshots into `outputs/screenshots/` |
+
+**Explainability, as in a RAG UI.** Each result shows its final score, its raw cosine similarity
+and how the reranker moved it (`was #7 ↑`); the caption shows per-stage timings
+(`embed → Qdrant → rerank`); the sidebar shows the tuned reranker settings and the test metrics.
+For a dataset query, ✅/❌ marks each result against the true pose.
+
+**Run it.**
+
+```bash
+streamlit run app.py                      # http://localhost:8501
+python scripts/capture_screenshots.py     # with the app running
+```
+
+**Try this.** Toggle the reranker on a random test photo and watch results move. On the stylised
+Triangle-pose upload (screenshot), the reranker reinforces the *Revolved* Triangle cluster — a
+reminder of its failure mode: it strengthens whatever pose dominates the candidate list.

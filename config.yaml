@@ -71,3 +71,7 @@ reranker:
     guardrail_metric: Hit@5
     max_guardrail_drop: 0.02
   rrf_k: 60               # for the hybrid-fusion comparison
+
+ui:
+  title: Yoga Pose Search
+  page_icon: "🧘"

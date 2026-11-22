@@ -1,0 +1,9 @@
+{
+  "config": "ensemble|mixed|pad|tta|lda0.1",
+  "points": 5774,
+  "dims": {
+    "image": 106,
+    "clip": 1024
+  },
+  "build_seconds": 3.5
+}

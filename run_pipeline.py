@@ -67,11 +67,21 @@ def run_tuning(config: dict) -> None:
     log_success(f"Selected {cfg.key} — val P@1 {val['P@1']:.3f} · mAP@10 {val['mAP@10']:.3f}")
 
 
+def run_indexing(config: dict) -> None:
+    """Embed every image with the selected pipeline and load it into Qdrant."""
+    from src.indexing.index_builder import build_index
+
+    meta = build_index(config)
+    write_json(meta, get_path(config, "output_dir") / "metrics" / "index_meta.json")
+    log_success(f"Indexed {meta['points']:,} points · vectors {meta['dims']} · {meta['build_seconds']} s")
+
+
 # Stage functions in execution order; each is switched on by `pipeline.<name>` in config.yaml.
 STAGES: dict = {
     "run_data_prep": run_data_prep,
     "run_embedding": run_embedding,
     "run_tuning": run_tuning,
+    "run_indexing": run_indexing,
 }
 
 

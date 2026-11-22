@@ -137,3 +137,30 @@ python run_pipeline.py --only tuning
 # 176 configurations scored on val
 # Selected ensemble|mixed|pad|tta|lda0.1 — val P@1 0.678 · mAP@10 0.499
 ```
+
+---
+
+## Step 5 — Indexing in a vector database (Qdrant)
+
+**Goal.** Store every image's vector so queries are a database lookup, not a NumPy scan.
+
+| Module | What it does |
+|---|---|
+| `src/indexing/vector_store.py` | thin Qdrant wrapper: named vectors, payload filters, single and batch search |
+| `src/indexing/index_builder.py` | embeds all 5,774 images with the selected pipeline, saves the fitted projection, upserts |
+
+**Design.** One point per image, two **named vectors** — `image` (106-d tuned embedding) and `clip`
+(1024-d CLIP space for text queries) — plus a payload (`path`, `pose`, `pose_display`, `split`).
+The `split` payload lets evaluation restrict results to the gallery with a filter, while the app
+searches everything.
+
+**Why Qdrant (local mode)?** Named vectors and payload filtering out of the box, no server to run
+(data lives in `data/indexes/qdrant`), and the same client code works against a Qdrant server or
+Qdrant Cloud by changing one line.
+
+**Run it.**
+
+```bash
+python run_pipeline.py --only indexing
+# Indexed 5,774 points · vectors {'image': 106, 'clip': 1024} · 3.5 s
+```

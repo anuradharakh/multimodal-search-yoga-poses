@@ -51,3 +51,6 @@ tuning:
 
 evaluation:
   ks: [1, 5, 10]
+
+indexing:
+  collection: yoga_poses  # Qdrant collection (embedded / local mode under data/indexes/qdrant)

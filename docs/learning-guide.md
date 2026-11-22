@@ -302,3 +302,44 @@ detector finds on the photo and on the painting; SSIM; and whether the **search 
 ```bash
 python run_pipeline.py --only style_transfer     # ≈ 17 min on an Apple M-series GPU
 ```
+
+---
+
+## Step 9 — Figures, notebooks and documentation
+
+**Goal.** Turn the run outputs into something a reader can follow without running anything.
+
+| File | What it is |
+|---|---|
+| `src/evaluation/figures.py` | search figures: backbone comparison, ablation, reranker trade-off and alternatives, examples, failures, hardest poses, text search |
+| `notebooks/semantic_search.ipynb` | narrated walk through the search pipeline, from the saved outputs (`RECOMPUTE = True` re-runs it) |
+| `notebooks/style_transfer.ipynb` | the style-transfer study, including one live run of the optimiser |
+| `README.md` | overview, architecture, results, and the *why* behind each design decision |
+
+```bash
+make notebooks      # execute both notebooks and export HTML to outputs/html/
+```
+
+---
+
+## How this maps to a text RAG pipeline
+
+| Text RAG (e.g. a website assistant) | This project (image retrieval) |
+|---|---|
+| crawl → clean HTML → chunk | download → clean / de-duplicate images → split |
+| sentence-transformer embeddings | frozen CNN embeddings (+ pooling, flip-TTA) |
+| — | **LDA projection** learned on the labelled gallery |
+| Chroma / FAISS vector store | **Qdrant** with named vectors and payload filters |
+| BM25 + dense, fused with RRF | tested — **hurts here** (the second retriever is too weak) |
+| cross-encoder reranker | **neighbourhood (k-reciprocal-style) reranker** |
+| Hit Rate@K, RAGAS | P@k, mAP@10, **Hit@5 as a guardrail** |
+| LLM answer generation | — (results *are* the answer) |
+| Streamlit chat UI with sources | Streamlit search UI with scores, rank movement and timings |
+
+**Three ideas that transfer to any retrieval system.**
+1. **Tune on validation, report on test** — and verify that the served path (the database)
+   reproduces the offline numbers exactly.
+2. **Measure each stage's lift.** The ablation and the reranker-alternatives table justify every
+   component, including the one that was *rejected* (hybrid RRF).
+3. **Optimise with a guardrail.** A single metric can be gamed by the system itself (more mAP,
+   fewer hits); pairing it with a user-facing guardrail metric keeps the trade-off explicit.

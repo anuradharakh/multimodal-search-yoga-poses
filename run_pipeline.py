@@ -7,12 +7,35 @@ Examples:
 
 import argparse
 
-from src.utils.config_loader import load_config
+from src.utils.config_loader import get_path, load_config
 from src.utils.device import seed_everything
-from src.utils.logger import log_step, log_success, log_warning
+from src.utils.io import write_json
+from src.utils.logger import log_info, log_step, log_success, log_warning
 
-# Stage functions are registered here in execution order as the pipeline is built up.
-STAGES: dict = {}
+
+def run_data_prep(config: dict) -> None:
+    """Download → clean → stratified split → data/processed/manifest.csv."""
+    from src.data.cleaning import clean_images
+    from src.data.download import get_raw_dataset_dir
+    from src.data.manifest import image_dir, manifest_path
+    from src.data.pose_names import display_name
+    from src.data.splitting import stratified_split
+
+    raw_dir = get_raw_dataset_dir(config)
+    df, report = clean_images(raw_dir, image_dir(config), config["data"]["min_side"], config["data"]["max_side"])
+    df["split"] = stratified_split(df, config["data"]["split"], config["project"]["random_seed"])
+    df["pose_display"] = df["pose"].map(display_name)
+    df.to_csv(manifest_path(config), index=False)
+
+    write_json(report.to_dict(), get_path(config, "output_dir") / "metrics" / "data_cleaning.json")
+    log_info(f"Cleaning report: {report.to_dict()}")
+    log_success(f"Kept {len(df):,} images of {df.pose.nunique()} poses — {df.split.value_counts().to_dict()}")
+
+
+# Stage functions in execution order; each is switched on by `pipeline.<name>` in config.yaml.
+STAGES: dict = {
+    "run_data_prep": run_data_prep,
+}
 
 
 def main() -> None:

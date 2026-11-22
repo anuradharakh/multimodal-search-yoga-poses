@@ -22,3 +22,11 @@ pipeline:
   run_indexing: true
   run_retrieval_eval: true
   run_style_transfer: false
+
+data:
+  min_side: 64            # drop images smaller than this (px)
+  max_side: 512           # downscale so the longest side is at most this (px)
+  split:                  # stratified by pose
+    gallery: 0.70         # indexed in the vector database
+    val: 0.15             # tuning queries
+    test: 0.15            # final, held-out queries

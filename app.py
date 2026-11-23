@@ -61,7 +61,7 @@ def results_grid(res: SearchResult, query_pose: str | None, reranked: bool, cols
             st.columns(cols), enumerate(hits[start : start + cols], start=start + 1), strict=False
         ):
             with col:
-                st.image(str(root / h.path), use_container_width=True)
+                st.image(str(root / h.path), width="stretch")
                 badge = "" if query_pose is None else ("✅ " if h.pose == query_pose else "❌ ")
                 moved = h.dense_rank - rank
                 move = f" · was #{h.dense_rank} {'↑' if moved > 0 else '↓'}" if reranked and moved else ""
@@ -92,7 +92,7 @@ def sidebar(search: PoseSearch) -> tuple[int, bool, str]:
         table = pd.DataFrame({"dense": test["dense"], "+ reranker": test["dense+rerank"]}).loc[
             ["P@1", "P@5", "mAP@10", "Hit@5"]
         ]
-        st.sidebar.dataframe(table.style.format("{:.3f}"), use_container_width=True)
+        st.sidebar.dataframe(table.style.format("{:.3f}"), width="stretch")
     st.sidebar.caption("Database: gallery split · 107 poses · Qdrant (local mode)")
     return k, rerank and vector == "image", vector
 
@@ -105,7 +105,7 @@ def image_tab(search: PoseSearch, k: int, rerank: bool, vector: str) -> None:
         if upload is not None and upload.file_id != st.session_state.get("last_upload"):
             st.session_state["last_upload"] = upload.file_id
             st.session_state["mode"] = "upload"
-        if st.button("🎲 Random held-out test photo", use_container_width=True):
+        if st.button("🎲 Random held-out test photo", width="stretch"):
             test = get_manifest().query("split == 'test'")
             st.session_state["sample"] = test.iloc[random.randrange(len(test))].to_dict()
             st.session_state["mode"] = "sample"
@@ -115,11 +115,11 @@ def image_tab(search: PoseSearch, k: int, rerank: bool, vector: str) -> None:
         query_img, query_pose = None, None
         if st.session_state.get("mode") == "upload":
             query_img = Image.open(upload).convert("RGB")
-            st.image(query_img, caption="Your query", use_container_width=True)
+            st.image(query_img, caption="Your query", width="stretch")
         elif st.session_state.get("mode") == "sample":
             s = st.session_state["sample"]
             query_img, query_pose = Image.open(s["abs_path"]).convert("RGB"), s["pose"]
-            st.image(query_img, caption=f"Query (ground truth): {display_name(query_pose)}", use_container_width=True)
+            st.image(query_img, caption=f"Query (ground truth): {display_name(query_pose)}", width="stretch")
     with right:
         if query_img is None:
             st.info("Upload a photo of a yoga pose, or pick a random held-out test photo.")

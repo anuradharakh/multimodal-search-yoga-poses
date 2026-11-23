@@ -354,4 +354,4 @@ vector DB**. `src/indexing/text_index.py` implements it. Each of the 107 poses g
 ("a photo of a person doing Bakasana (Crow Pose), a yoga pose"), embedded with CLIP's text encoder
 and stored in the Qdrant collection `pose_texts`. A text query is matched text ↔ text, and the
 best-matching pose filters gallery photos. Text → image P@10 rises from 0.04 (direct text ↔ image)
-to 0.31 with English names and 0.69 with Sanskrit names (`outputs/metrics/text_search_names.csv`).
+to 0.39 with English names and 0.75 with Sanskrit names (`outputs/metrics/text_search_names.csv`).

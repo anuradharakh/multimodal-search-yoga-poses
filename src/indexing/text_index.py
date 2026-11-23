@@ -19,8 +19,11 @@ def pose_descriptions() -> pd.DataFrame:
     """One row per pose: ``pose``, ``pose_display``, ``sanskrit``, ``english``, ``description``."""
     names = pose_names().reset_index().rename(columns={"folder": "pose"})
     names["pose_display"] = names["pose"].map(display_name)
+    # The source name list labels Tulasana "Scale Pose (another name)" (a second spelling of Tolasana).
+    # The parenthetical is noise for CLIP: it made that entry a "hub" that matched unrelated queries.
+    english = names.english.str.replace(r"\s*\(another name\)", "", regex=True)
     names["description"] = [
-        DESCRIPTION_TEMPLATE.format(sanskrit=s, english=e) for s, e in zip(names.sanskrit, names.english, strict=True)
+        DESCRIPTION_TEMPLATE.format(sanskrit=s, english=e) for s, e in zip(names.sanskrit, english, strict=True)
     ]
     return names[["pose", "pose_display", "sanskrit", "english", "description"]]
 

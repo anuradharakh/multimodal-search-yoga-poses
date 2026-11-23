@@ -185,15 +185,17 @@ near-perfect.
 | Route | Text → image P@10 |
 |---|---|
 | text embedding vs. CLIP **image** vectors (text ↔ image) | 0.04 |
-| text embedding vs. stored **pose-name** embeddings (text ↔ text), then that pose's photos: English name | 0.31 |
-| same route, Sanskrit name | **0.69** |
+| text embedding vs. stored **pose-name** embeddings (text ↔ text), then that pose's photos: English name | 0.39 |
+| same route, Sanskrit name | **0.75** |
 
 CLIP struggles to match a pose *name* to a photo: zero-shot accuracy over 107 names is ~5%, against
 0.9% chance. It is much better at matching text to text. So the text branch of the architecture
 stores a CLIP text embedding of each pose's description in a second Qdrant collection. A query is
 matched against those descriptions, and the best-matching pose selects photos through a payload
 filter. English names score lower than Sanskrit ones because many are near-identical (Warrior
-I/II/III, the "… Pose" suffix).
+I/II/III, the "… Pose" suffix). One label in the source list, "Scale Pose (another name)", is
+written as "Scale Pose" in its description: the parenthetical made that entry match unrelated
+queries.
 
 ## Style transfer
 

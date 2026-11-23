@@ -22,8 +22,8 @@ UI = CONFIG["ui"]
 st.set_page_config(page_title=UI["title"], page_icon=UI["page_icon"], layout="wide")
 
 TEXT_EXAMPLES = [
-    "warrior two",
     "crow pose",
+    "tree pose",
     "a headstand",
     "Warrior II pose with arms stretched out",
     "a person balancing on one leg like a tree",

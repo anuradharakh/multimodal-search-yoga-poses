@@ -25,3 +25,26 @@ def test_qdrant_roundtrip_filters_and_exclusion():
     batch = store.search_batch(vecs[[1, 3]], using="image", k=3, split="gallery")
     assert all(h.payload["split"] == "gallery" for row in batch for h in row)
     assert labels_of(batch).shape == (2, 3)
+
+
+def test_second_local_client_on_same_folder_raises_clear_error(tmp_path):
+    import pytest
+
+    from src.indexing.vector_store import IndexLockedError
+
+    first = VectorStore(tmp_path / "qdrant", "t")
+    try:
+        with pytest.raises(IndexLockedError, match="already open in another process"):
+            VectorStore(tmp_path / "qdrant", "t")
+    finally:
+        first.close()
+
+
+def test_unreferenced_client_in_same_process_does_not_block_reopening(tmp_path):
+    stale = VectorStore(tmp_path / "qdrant", "t")
+    stale.recreate({"image": 4})
+    stale.cycle = stale  # a reference cycle: only the garbage collector can free it
+    del stale  # dropped without close(), as when Streamlit discards a cached service
+    fresh = VectorStore(tmp_path / "qdrant", "t")
+    assert fresh.client.collection_exists("t")
+    fresh.close()

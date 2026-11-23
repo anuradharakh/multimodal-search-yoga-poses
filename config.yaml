@@ -54,6 +54,7 @@ evaluation:
 
 indexing:
   collection: yoga_poses  # Qdrant collection (embedded / local mode under data/indexes/qdrant)
+  qdrant_url: null        # e.g. http://localhost:6333 to use a Qdrant server (allows several processes)
 
 retrieval:
   top_k: 12               # results shown in the app

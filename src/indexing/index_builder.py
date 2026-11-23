@@ -34,7 +34,8 @@ def projector_path(config: dict) -> Path:
 
 
 def open_store(config: dict) -> VectorStore:
-    return VectorStore(get_path(config, "index_dir") / "qdrant", config["indexing"]["collection"])
+    idx = config["indexing"]
+    return VectorStore(get_path(config, "index_dir") / "qdrant", idx["collection"], url=idx.get("qdrant_url"))
 
 
 def build_index(config: dict) -> dict:

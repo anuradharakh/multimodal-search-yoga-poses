@@ -11,6 +11,7 @@ Qdrant's local mode needs no server and stores data under ``data/indexes/qdrant`
 Qdrant server or Qdrant Cloud is a one-line change (``QdrantClient(url=...)``).
 """
 
+import gc
 import warnings
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -22,6 +23,17 @@ from qdrant_client import QdrantClient
 from qdrant_client.http import models as qm
 
 
+class IndexLockedError(RuntimeError):
+    """The embedded Qdrant folder is already open in another process."""
+
+    def __init__(self, path: Path | str):
+        super().__init__(
+            f"The vector index at {Path(path).name}/ is already open in another process "
+            "(another app instance, notebook or pipeline run). Qdrant's local mode allows one process at a time: "
+            "stop the other one, or run a Qdrant server and set `indexing.qdrant_url` in config.yaml."
+        )
+
+
 @dataclass
 class Hit:
     id: int
@@ -30,10 +42,38 @@ class Hit:
 
 
 class VectorStore:
-    def __init__(self, path: Path | str | None, collection: str):
-        # path=None → in-memory instance (used by the unit tests)
-        self.client = QdrantClient(path=str(path)) if path else QdrantClient(location=":memory:")
+    def __init__(self, path: Path | str | None, collection: str, url: str | None = None):
+        """``url`` → a Qdrant server; else embedded storage at ``path``; ``path=None`` → in-memory (tests).
+
+        Embedded (local) mode locks its folder, so only **one process** can open it at a time; a
+        Qdrant server allows several (e.g. two app instances, or the app plus an evaluation run).
+        """
+        if url:
+            self.client = QdrantClient(url=url)
+        elif path:
+            self.client = self._open_local(Path(path))
+        else:
+            self.client = QdrantClient(location=":memory:")
         self.collection = collection
+
+    @staticmethod
+    def _open_local(path: Path) -> QdrantClient:
+        """Open embedded storage; on a lock conflict, free unreferenced clients and retry once.
+
+        A stale client can live on *in the same process* — e.g. after Streamlit re-runs the app
+        and discards its cached search service. Garbage-collecting it releases the folder lock.
+        If the lock is still held afterwards, another process owns the index.
+        """
+        for attempt in range(2):
+            try:
+                return QdrantClient(path=str(path))
+            except RuntimeError as e:
+                if "already accessed" not in str(e):
+                    raise
+                if attempt == 1:
+                    raise IndexLockedError(path) from e
+                gc.collect()
+        raise AssertionError("unreachable")
 
     def recreate(self, dims: Mapping[str, int]) -> None:
         if self.client.collection_exists(self.collection):

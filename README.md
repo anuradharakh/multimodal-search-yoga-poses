@@ -143,6 +143,12 @@ python run_pipeline.py --only style_transfer    # one stage
 streamlit run app.py        # http://localhost:8501
 ```
 
+Qdrant's embedded mode locks `data/indexes/qdrant`, so only **one process** can use the index at a
+time: one app instance, *or* a notebook, *or* a pipeline run. Stop the other one first. To run
+several at once, start a Qdrant server (`docker run -p 6333:6333 qdrant/qdrant`), set
+`indexing.qdrant_url: http://localhost:6333` in `config.yaml`, and re-run
+`python run_pipeline.py --only indexing`.
+
 | Image upload (a stylised photo, not in the database) | Text search |
 |---|---|
 | ![upload](outputs/screenshots/image_upload_results.png) | ![text](outputs/screenshots/text_search.png) |

@@ -13,6 +13,7 @@ from PIL import Image
 
 from src.data.manifest import image_dir, load_manifest
 from src.data.pose_names import display_name
+from src.indexing.vector_store import IndexLockedError
 from src.retrieval.search_service import PoseSearch, SearchResult
 from src.utils.config_loader import get_path, load_config
 
@@ -144,6 +145,9 @@ def main() -> None:
         search = get_search()
     except FileNotFoundError as e:
         st.error(f"{e}\n\nRun `python run_pipeline.py` first.")
+        st.stop()
+    except IndexLockedError as e:
+        st.error(str(e))
         st.stop()
     k, rerank, vector = sidebar(search)
     tab_img, tab_txt = st.tabs(["🔍 Search by image", "💬 Search by text"])

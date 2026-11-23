@@ -48,3 +48,9 @@ def test_unreferenced_client_in_same_process_does_not_block_reopening(tmp_path):
     fresh = VectorStore(tmp_path / "qdrant", "t")
     assert fresh.client.collection_exists("t")
     fresh.close()
+
+
+def test_with_collection_shares_the_client():
+    store = VectorStore(path=None, collection="a")
+    other = store.with_collection("b")
+    assert other.client is store.client and other.collection == "b"

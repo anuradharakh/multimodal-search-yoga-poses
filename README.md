@@ -25,9 +25,10 @@ Query photo                                        Query text
     ↓                                                  ↓
 Frozen CNN ensemble (ResNet-50, EfficientNetV2-S,  CLIP text encoder
 ConvNeXt-T, CLIP RN50) · GeM pooling · flip-TTA        ↓
-    ↓                                              Qdrant "clip" vector (1024-d)
-LDA projection fitted on the labelled gallery          ↓
-    ↓                                              Top-k results
+    ↓                                              Qdrant "pose_texts" collection:
+LDA projection fitted on the labelled gallery      CLIP text embeddings of 107 pose descriptions
+    ↓                                                  ↓ best-matching pose
+                                                   gallery photos of that pose (payload filter)
 Qdrant "image" vector (106-d) → top fetch_k
     ↓
 Neighbourhood reranker (gallery-neighbour overlap)
@@ -49,8 +50,9 @@ k-reciprocal re-ranking) rescores them by how much each candidate's own nearest 
 overlap with the query's. Its settings are tuned on validation with a **Hit@5 guardrail**.
 
 ## Text → image search
-CLIP-RN50 puts text and images in one space, so the same index answers queries like
-"a headstand".
+Following the reference architecture's text branch, CLIP text embeddings of all 107 pose
+descriptions are stored in the vector database. A query like "crow pose" is matched against them,
+then answered with that pose's photos. A direct text ↔ image route is also available.
 
 ## Explainable UI
 Each result shows its final score, its raw cosine similarity and how far the reranker moved it
@@ -68,7 +70,7 @@ search engine still recognises the pose.
 |---|---|
 | Embeddings | ResNet-50, EfficientNetV2-S, ConvNeXt-T (torchvision, ImageNet) · CLIP RN50 (open_clip) |
 | Projection | shrinkage LDA (scikit-learn), fitted on the gallery |
-| Vector store | Qdrant (embedded / local mode, named vectors, payload filters) |
+| Vector store | Qdrant (embedded / local mode): image collection with named vectors + pose-text collection |
 | Reranker | neighbourhood overlap (k-reciprocal style); α-query expansion and RRF compared |
 | Style transfer | VGG-19 + L-BFGS (PyTorch), Keypoint R-CNN for pose metrics |
 | Frontend | Streamlit |
@@ -178,8 +180,20 @@ near-perfect.
 <p align="center"><img src="outputs/figures/search_hardest_poses.png" width="720"></p>
 <p align="center"><img src="outputs/figures/search_failures.png" width="900"></p>
 
-**Text → image.** "A headstand" returns inversions, but fine-grained pose names fail: zero-shot
-accuracy over the 107 names is ~5%, against 0.9% chance.
+**Text → image: two routes, both through the vector database.**
+
+| Route | Text → image P@10 |
+|---|---|
+| text embedding vs. CLIP **image** vectors (text ↔ image) | 0.04 |
+| text embedding vs. stored **pose-name** embeddings (text ↔ text), then that pose's photos: English name | 0.31 |
+| same route, Sanskrit name | **0.69** |
+
+CLIP struggles to match a pose *name* to a photo: zero-shot accuracy over 107 names is ~5%, against
+0.9% chance. It is much better at matching text to text. So the text branch of the architecture
+stores a CLIP text embedding of each pose's description in a second Qdrant collection. A query is
+matched against those descriptions, and the best-matching pose selects photos through a payload
+filter. English names score lower than Sanskrit ones because many are near-identical (Warrior
+I/II/III, the "… Pose" suffix).
 
 ## Style transfer
 

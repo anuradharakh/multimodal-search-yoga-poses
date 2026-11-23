@@ -22,6 +22,8 @@ UI = CONFIG["ui"]
 st.set_page_config(page_title=UI["title"], page_icon=UI["page_icon"], layout="wide")
 
 TEXT_EXAMPLES = [
+    "warrior two",
+    "crow pose",
     "a headstand",
     "Warrior II pose with arms stretched out",
     "a person balancing on one leg like a tree",
@@ -128,11 +130,27 @@ def image_tab(search: PoseSearch, k: int, rerank: bool, vector: str) -> None:
 
 
 def text_tab(search: PoseSearch, k: int) -> None:
-    st.write("Describe a pose in words — CLIP maps text and images into one embedding space.")
+    st.write("Describe a pose in words. Both routes use CLIP's text encoder and the vector database.")
+    route = st.radio(
+        "Search route",
+        ["names", "images"],
+        horizontal=True,
+        format_func=lambda r: {
+            "names": "Match stored pose-name embeddings (recommended)",
+            "images": "Compare text directly with image vectors",
+        }[r],
+    )
     example = st.selectbox("Examples", ["(type your own)", *TEXT_EXAMPLES])
     text = st.text_input("Describe the pose", value="" if example.startswith("(") else example)
-    if text:
-        results_grid(search.search_text(text, k=k), None, reranked=False)
+    if not text:
+        return
+    res = search.search_text(text, k=k, route=route)
+    if res.matched_poses:
+        st.markdown(
+            "**Closest pose names in the text index:** "
+            + " · ".join(f"{display_name(p)} `{s:.3f}`" for p, s in res.matched_poses)
+        )
+    results_grid(res, None, reranked=False)
 
 
 def main() -> None:

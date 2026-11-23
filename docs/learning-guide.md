@@ -343,3 +343,15 @@ make notebooks      # execute both notebooks and export HTML to outputs/html/
    component, including the one that was *rejected* (hybrid RRF).
 3. **Optimise with a guardrail.** A single metric can be gamed by the system itself (more mAP,
    fewer hits); pairing it with a user-facing guardrail metric keeps the trade-off explicit.
+
+
+---
+
+## Addendum — the text branch of the architecture
+
+The reference diagram has a second input: **Text → text-embedding generator → text embeddings →
+vector DB**. `src/indexing/text_index.py` implements it. Each of the 107 poses gets a description
+("a photo of a person doing Bakasana (Crow Pose), a yoga pose"), embedded with CLIP's text encoder
+and stored in the Qdrant collection `pose_texts`. A text query is matched text ↔ text, and the
+best-matching pose filters gallery photos. Text → image P@10 rises from 0.04 (direct text ↔ image)
+to 0.31 with English names and 0.69 with Sanskrit names (`outputs/metrics/text_search_names.csv`).

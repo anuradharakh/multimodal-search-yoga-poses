@@ -48,6 +48,7 @@ class SearchHit:
 class SearchResult:
     hits: list[SearchHit] = field(default_factory=list)
     timings_ms: dict[str, float] = field(default_factory=dict)
+    matched_poses: list[tuple[str, float]] = field(default_factory=list)  # text queries: (pose, similarity)
 
 
 class PoseSearch:
@@ -58,13 +59,14 @@ class PoseSearch:
         self.image_encoder = QueryEncoder(self.cfg, self.device, load_projector(config))
         self.clip_encoder = QueryEncoder(CLIP_CONFIG, self.device)
         self.store = open_store(config)
+        self.text_store = self.store.with_collection(config["indexing"]["text_collection"])
         self.params = load_reranker_params(config)
         self.reranker = NeighborhoodReranker(load_neighbor_table(neighbor_table_path(config)), self.params)
 
-    def _search(self, vector, using: str, k: int, rerank: bool, timings: dict) -> SearchResult:
+    def _search(self, vector, using: str, k: int, rerank: bool, timings: dict, pose: str | None = None) -> SearchResult:
         t0 = time.perf_counter()
         fetch = max(k, self.params.fetch_k) if rerank else k
-        hits = self.store.search(vector, using=using, k=fetch, split="gallery")
+        hits = self.store.search(vector, using=using, k=fetch, split="gallery", pose=pose)
         timings["vector_db"] = (time.perf_counter() - t0) * 1000
         dense = {h.id: (h, h.score, r) for r, h in enumerate(hits, start=1)}
         if rerank:
@@ -87,10 +89,21 @@ class PoseSearch:
         timings = {"embed": (time.perf_counter() - t0) * 1000}
         return self._search(vec, vector, k, rerank and vector == "image", timings)
 
-    def search_text(self, text: str, k: int = 12) -> SearchResult:
+    def search_text(self, text: str, k: int = 12, route: str = "names", n_names: int = 3) -> SearchResult:
+        """Text query. ``route="names"``: match the stored pose-description embeddings (text ↔ text),
+        then return gallery photos of the best-matching pose. ``route="images"``: compare the text
+        directly with CLIP image vectors (text ↔ image)."""
         t0 = time.perf_counter()
         vec = self.clip_encoder.encode_texts([text])[0]
-        return self._search(vec, "clip", k, False, {"embed": (time.perf_counter() - t0) * 1000})
+        timings = {"embed": (time.perf_counter() - t0) * 1000}
+        if route == "images":
+            return self._search(vec, "clip", k, False, timings)
+        t1 = time.perf_counter()
+        names = self.text_store.search(vec, using="text", k=n_names)
+        timings["text_index"] = (time.perf_counter() - t1) * 1000
+        result = self._search(vec, "clip", k, False, timings, pose=names[0].payload["pose"])
+        result.matched_poses = [(h.payload["pose"], h.score) for h in names]
+        return result
 
     def predict_pose(self, img: Image.Image, k: int = 10) -> tuple[str, float]:
         """Similarity-weighted kNN vote over the top-k results."""

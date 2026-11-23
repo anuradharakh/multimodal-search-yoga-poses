@@ -54,6 +54,7 @@ evaluation:
 
 indexing:
   collection: yoga_poses  # Qdrant collection (embedded / local mode under data/indexes/qdrant)
+  text_collection: pose_texts   # CLIP text embeddings of the 107 pose descriptions
   qdrant_url: null        # e.g. http://localhost:6333 to use a Qdrant server (allows several processes)
 
 retrieval:

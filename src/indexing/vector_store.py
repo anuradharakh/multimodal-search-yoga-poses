@@ -56,6 +56,12 @@ class VectorStore:
             self.client = QdrantClient(location=":memory:")
         self.collection = collection
 
+    def with_collection(self, collection: str) -> "VectorStore":
+        """Another collection on the *same* client (a second local client on the folder would hit the lock)."""
+        other = object.__new__(VectorStore)
+        other.client, other.collection = self.client, collection
+        return other
+
     @staticmethod
     def _open_local(path: Path) -> QdrantClient:
         """Open embedded storage; on a lock conflict, free unreferenced clients and retry once.

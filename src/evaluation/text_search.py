@@ -9,6 +9,7 @@ from src.embedding.backbones import load_backbone
 from src.embedding.postprocess import build_vectors
 from src.evaluation.metrics import retrieval_metrics, topk_indices
 from src.indexing.index_builder import CLIP_CONFIG
+from src.indexing.text_index import pose_descriptions
 
 TEXT_TEMPLATES = {
     "sanskrit": "a photo of a person doing {sanskrit} yoga pose",
@@ -50,4 +51,30 @@ def text_search_eval(config: dict, device) -> pd.DataFrame:
                 "zero-shot acc (test)": float((zero_shot == labels[test]).mean()),
             }
         )
+    return pd.DataFrame(rows)
+
+
+# Query wordings for the name route — none is identical to the stored description.
+NAME_QUERIES = {
+    "English name only": "{english}",
+    "Sanskrit name only": "{sanskrit}",
+    "English, in a sentence": "a person doing the {english}",
+}
+
+
+def text_name_route_eval(config: dict, device) -> pd.DataFrame:
+    """Text → stored pose-description embeddings → pose. With a correct top-1 pose every returned
+    photo shows that pose, so text → image P@10 via this route equals the top-1 accuracy."""
+    desc = pose_descriptions()
+    clip = load_backbone("clip_rn50", device)
+    stored = clip.encode_text(desc["description"].tolist(), device).cpu().numpy()
+    poses = desc["pose"].to_numpy()
+    rows = []
+    for label, template in NAME_QUERIES.items():
+        queries = [template.format(sanskrit=s, english=e) for s, e in zip(desc.sanskrit, desc.english, strict=True)]
+        q = clip.encode_text(queries, device).cpu().numpy()
+        top = np.argsort(-(q @ stored.T), axis=1)[:, :5]
+        hit1 = float((poses[top[:, 0]] == poses).mean())
+        hit5 = float((poses[top] == poses[:, None]).any(axis=1).mean())
+        rows.append({"query wording": label, "pose top-1": hit1, "pose top-5": hit5, "text→image P@10": hit1})
     return pd.DataFrame(rows)

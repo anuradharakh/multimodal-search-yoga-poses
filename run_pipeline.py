@@ -81,7 +81,7 @@ def run_retrieval_eval(config: dict) -> None:
     from dataclasses import asdict
 
     from src.evaluation import retrieval_eval as R
-    from src.evaluation.text_search import text_search_eval
+    from src.evaluation.text_search import text_name_route_eval, text_search_eval
     from src.retrieval.reranker import RerankerParams, load_neighbor_table
     from src.retrieval.search_service import neighbor_table_path, reranker_selection_path
     from src.utils.device import get_device
@@ -111,8 +111,11 @@ def run_retrieval_eval(config: dict) -> None:
     results["val"].pop("_ids"), results["val"].pop("_qi")
     write_json({"reranker": asdict(best), **results}, metrics_dir / "retrieval_final.json")
 
-    text = text_search_eval(config, get_device(config["project"]["device"]))
-    write_csv(text, metrics_dir / "text_search.csv")
+    device = get_device(config["project"]["device"])
+    write_csv(text_search_eval(config, device), metrics_dir / "text_search.csv")
+    names = text_name_route_eval(config, device)
+    write_csv(names, metrics_dir / "text_search_names.csv")
+    log_info("Text → pose-name embeddings (stored in the vector DB):\n" + names.round(3).to_string(index=False))
 
     for name in ("dense", "dense+rerank"):
         m = test[name]
